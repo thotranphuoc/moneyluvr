@@ -69,8 +69,14 @@ const MONTH_YEAR_DATE_FORMATS = {
     <div class="budget-category-list" cdkDropList (cdkDropListDropped)="onCategoryDrop($event)">
       @for (cat of expenseCategories(); track cat.id) {
         <mat-card class="ml-card budget-category-card" cdkDrag>
+          <div *cdkDragPreview class="budget-drag-preview">
+            <mat-icon>drag_indicator</mat-icon>
+            <span class="preview-dot" [style.background-color]="cat.color || '#64748b'"></span>
+            <span class="preview-name">{{ getCategoryDisplayName(cat) }}</span>
+          </div>
           <mat-card-content>
             <div class="card-header">
+              <mat-icon class="drag-handle" cdkDragHandle>drag_indicator</mat-icon>
               @if (editingCategoryId() === cat.id) {
                 <div class="edit-form">
                   <mat-form-field appearance="outline" class="amount-field">
@@ -122,17 +128,26 @@ const MONTH_YEAR_DATE_FORMATS = {
     .budget-category-list {
       display: flex;
       flex-direction: column;
-      gap: 1rem;
+      gap: 0.6rem;
       margin-top: 1rem;
     }
     .budget-category-card .mat-mdc-card-content {
-      padding: 1rem 1.25rem;
+      padding: 0.6rem 0.75rem;
     }
     .card-header {
       display: flex;
       align-items: center;
       gap: 0.5rem;
       min-width: 0;
+    }
+    .drag-handle {
+      cursor: grab;
+      color: var(--ml-text-muted);
+      margin-right: 0.25rem;
+      flex-shrink: 0;
+    }
+    .drag-handle:active {
+      cursor: grabbing;
     }
     .cat-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
     .cat-name {
@@ -144,16 +159,16 @@ const MONTH_YEAR_DATE_FORMATS = {
     }
     .card-header-spacer { flex: 1 1 auto; min-width: 0.5rem; }
     .card-limit {
-      margin: 0.35rem 0 0 0;
+      margin: 0.2rem 0 0 0;
       font-size: 0.875rem;
       color: var(--ml-text-muted);
     }
     .card-progress {
-      margin-top: 0.75rem;
+      margin-top: 0.4rem;
       width: 100%;
     }
     .card-progress ::ng-deep .mat-mdc-progress-bar {
-      height: 8px;
+      height: 6px;
       border-radius: 4px;
     }
     .edit-form {
@@ -165,6 +180,36 @@ const MONTH_YEAR_DATE_FORMATS = {
     }
     .edit-form .amount-field { width: 140px; flex: 1 1 auto; min-width: 100px; }
     .empty-msg { margin: 0; color: var(--ml-text-muted); }
+    .budget-drag-preview {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.5rem 0.75rem;
+      background: var(--ml-bg-card);
+      border-radius: var(--ml-radius);
+      box-shadow: var(--ml-shadow-lg);
+      border: 1px solid var(--ml-border);
+      min-width: 180px;
+    }
+    .budget-drag-preview mat-icon {
+      color: var(--ml-text-muted);
+      font-size: 20px;
+      width: 20px;
+      height: 20px;
+    }
+    .budget-drag-preview .preview-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+    .budget-drag-preview .preview-name {
+      font-size: 0.875rem;
+      font-weight: 500;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
   `],
 })
 export class BudgetComponent {
@@ -283,11 +328,14 @@ export class BudgetComponent {
 
   async onCategoryDrop(event: CdkDragDrop<Category[]>): Promise<void> {
     if (event.previousIndex === event.currentIndex) return;
+    const full = this.data.categories();
     const cats = [...this.expenseCategories()];
     moveItemInArray(cats, event.previousIndex, event.currentIndex);
     const baseOrder = cats.length ? Math.min(...this.expenseCategories().map(c => c.order)) : 0;
-    for (let i = 0; i < cats.length; i++) {
-      await this.data.updateCategory({ id: cats[i].id, order: baseOrder + i });
-    }
+    const withOrder = cats.map((c, i) => ({ ...c, order: baseOrder + i }));
+    const ids = new Set(withOrder.map((c) => c.id));
+    const newFull = full.map((c) => (ids.has(c.id) ? withOrder.find((x) => x.id === c.id)! : c));
+    this.data.setCategoriesOrder(newFull);
+    Promise.all(withOrder.map((c) => this.data.updateCategoryOrder(c.id, c.order))).catch(() => {});
   }
 }

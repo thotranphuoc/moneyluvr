@@ -166,3 +166,44 @@ mat-card.ml-card {
 .mat-mdc-dialog-container .mat-mdc-dialog-actions {
   padding-bottom: 0;
 }
+
+// CDK drag-drop: giảm giựt khi kéo (compositing layer, không transition trong lúc drag)
+.cdk-drag-dragging {
+  will-change: transform;
+  transition: none !important;
+}
+.cdk-drag-placeholder {
+  opacity: 0.4;
+}
+
+// Budget card: preview kéo gọn (giống list row, mượt hơn kéo cả card)
+.budget-drag-preview {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  background: var(--ml-bg-card);
+  border-radius: var(--ml-radius);
+  box-shadow: var(--ml-shadow-lg);
+  border: 1px solid var(--ml-border);
+  min-width: 180px;
+}
+.budget-drag-preview .mat-icon {
+  color: var(--ml-text-muted);
+  font-size: 20px;
+  width: 20px;
+  height: 20px;
+}
+.budget-drag-preview .preview-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.budget-drag-preview .preview-name {
+  font-size: 0.875rem;
+  font-weight: 500;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}

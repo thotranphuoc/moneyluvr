@@ -294,6 +294,16 @@ export class DataService {
     this.categoriesSig.set(list);
   }
 
+  /** Chỉ cập nhật order lên API, không đổi signal (dùng sau optimistic set). */
+  updateCategoryOrder(id: string, order: number): Promise<void> {
+    return this.supabase.updateCategory({ id, order });
+  }
+
+  /** Cập nhật ngay thứ tự danh mục trên UI (optimistic); gọi trước khi sync API. */
+  setCategoriesOrder(cats: Category[]): void {
+    this.categoriesSig.set([...cats].sort((a, b) => a.order - b.order));
+  }
+
   /** Id danh mục "Không phân loại" không được xóa. */
   isUncategorizedCategoryId(id: string, userId: string): boolean {
     const { expenseId, incomeId } = getUncategorizedCategoryIds(userId);
@@ -343,6 +353,16 @@ export class DataService {
       .map(x => (x.id === w.id ? { ...x, ...w } : x))
       .sort((a, b) => a.order - b.order);
     this.walletsSig.set(list);
+  }
+
+  /** Chỉ cập nhật order lên API, không đổi signal (dùng sau optimistic set). */
+  updateWalletOrder(id: string, order: number): Promise<void> {
+    return this.supabase.updateWallet({ id, order });
+  }
+
+  /** Cập nhật ngay thứ tự ví trên UI (optimistic); gọi trước khi sync API. */
+  setWalletsOrder(wallets: Wallet[]): void {
+    this.walletsSig.set([...wallets].sort((a, b) => a.order - b.order));
   }
 
   async deleteWallet(userId: string, id: string): Promise<void> {

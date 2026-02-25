@@ -821,29 +821,35 @@ export class SettingsComponent {
     if (event.previousIndex === event.currentIndex) return;
     const list = [...this.data.wallets()];
     moveItemInArray(list, event.previousIndex, event.currentIndex);
-    for (let i = 0; i < list.length; i++) {
-      await this.data.updateWallet({ id: list[i].id, order: i });
-    }
+    const withOrder = list.map((w, i) => ({ ...w, order: i }));
+    this.data.setWalletsOrder(withOrder);
+    Promise.all(withOrder.map((w) => this.data.updateWalletOrder(w.id, w.order))).catch(() => {});
   }
 
   async onIncomeCategoryDrop(event: CdkDragDrop<Category[]>): Promise<void> {
     if (event.previousIndex === event.currentIndex) return;
+    const full = this.data.categories();
     const cats = [...this.incomeCategories()];
     moveItemInArray(cats, event.previousIndex, event.currentIndex);
     const baseOrder = cats.length ? Math.min(...this.incomeCategories().map(c => c.order)) : 0;
-    for (let i = 0; i < cats.length; i++) {
-      await this.data.updateCategory({ id: cats[i].id, order: baseOrder + i });
-    }
+    const withOrder = cats.map((c, i) => ({ ...c, order: baseOrder + i }));
+    const ids = new Set(withOrder.map((c) => c.id));
+    const newFull = full.map((c) => (ids.has(c.id) ? withOrder.find((x) => x.id === c.id)! : c));
+    this.data.setCategoriesOrder(newFull);
+    Promise.all(withOrder.map((c) => this.data.updateCategoryOrder(c.id, c.order))).catch(() => {});
   }
 
   async onExpenseCategoryDrop(event: CdkDragDrop<Category[]>): Promise<void> {
     if (event.previousIndex === event.currentIndex) return;
+    const full = this.data.categories();
     const cats = [...this.expenseCategories()];
     moveItemInArray(cats, event.previousIndex, event.currentIndex);
     const baseOrder = cats.length ? Math.min(...this.expenseCategories().map(c => c.order)) : 0;
-    for (let i = 0; i < cats.length; i++) {
-      await this.data.updateCategory({ id: cats[i].id, order: baseOrder + i });
-    }
+    const withOrder = cats.map((c, i) => ({ ...c, order: baseOrder + i }));
+    const ids = new Set(withOrder.map((c) => c.id));
+    const newFull = full.map((c) => (ids.has(c.id) ? withOrder.find((x) => x.id === c.id)! : c));
+    this.data.setCategoriesOrder(newFull);
+    Promise.all(withOrder.map((c) => this.data.updateCategoryOrder(c.id, c.order))).catch(() => {});
   }
 
   private errMsg(e: unknown): string {
