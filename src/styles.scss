@@ -1,0 +1,168 @@
+@use '@angular/material' as mat;
+
+// ---- Biến giao diện tối giản, sang trọng ----
+:root {
+  --ml-font: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+  --ml-bg: #f8fafc;
+  --ml-bg-card: #ffffff;
+  --ml-primary: #0d9488;
+  --ml-primary-dark: #0f766e;
+  --ml-text: #1e293b;
+  --ml-text-muted: #64748b;
+  --ml-border: #e2e8f0;
+  --ml-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+  --ml-shadow-lg: 0 8px 32px -8px rgba(0, 0, 0, 0.08);
+  --ml-shadow-card-hover: 0 12px 40px -12px rgba(0, 0, 0, 0.12);
+  --ml-radius: 12px;
+  --ml-radius-lg: 16px;
+  --ml-success: #059669;
+  --ml-error: #dc2626;
+}
+
+html.dark {
+  color-scheme: dark;
+  --ml-bg: #0f172a;
+  --ml-bg-card: #1e293b;
+  --ml-text: #f1f5f9;
+  --ml-text-muted: #94a3b8;
+  --ml-border: #334155;
+  --ml-shadow: 0 1px 2px rgba(0, 0, 0, 0.15);
+  --ml-shadow-lg: 0 8px 32px -8px rgba(0, 0, 0, 0.35);
+  --ml-shadow-card-hover: 0 12px 40px -12px rgba(0, 0, 0, 0.45);
+}
+
+html {
+  height: 100%;
+  @include mat.theme((
+    color: (
+      primary: mat.$cyan-palette,
+      tertiary: mat.$blue-palette,
+    ),
+    typography: (
+      font-family: var(--ml-font),
+    ),
+    density: 0,
+  ));
+}
+
+body {
+  margin: 0;
+  height: 100%;
+  font-family: var(--ml-font);
+  background-color: var(--ml-bg);
+  color: var(--ml-text);
+  line-height: 1.5;
+  letter-spacing: 0.01em;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body.ml-auth-page {
+  overflow: hidden;
+  height: 100vh;
+  max-height: 100vh;
+}
+
+// Utility: truncate long text with ellipsis
+.text-ellipsis {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+// Tiêu đề trang thống nhất (UPPERCASE, font nhỏ vừa)
+.page-header {
+  font-size: 1.125rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--ml-text);
+  margin: 0 0 1rem 0;
+}
+
+// Card chung
+mat-card.ml-card {
+  border-radius: var(--ml-radius-lg);
+  box-shadow: var(--ml-shadow);
+  border: 1px solid var(--ml-border);
+  background: var(--ml-bg-card);
+  padding: 1.25rem 1.5rem;
+  overflow: hidden;
+  transition: box-shadow 0.25s ease, transform 0.25s ease;
+
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--ml-shadow-card-hover);
+  }
+
+  .mat-mdc-card-header {
+    padding: 0 0 0.75rem 0;
+  }
+  .mat-mdc-card-title {
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--ml-text-muted);
+  }
+  .mat-mdc-card-content {
+    padding: 0;
+    font-size: 1.125rem;
+    color: var(--ml-text);
+  }
+}
+
+// Material components dùng biến giao diện
+.mat-mdc-form-field {
+  .mat-mdc-text-field-wrapper {
+    border-radius: var(--ml-radius);
+  }
+}
+.mat-mdc-raised-button,
+.mat-mdc-flat-button {
+  border-radius: var(--ml-radius);
+  text-transform: none;
+  font-weight: 500;
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+.mat-mdc-tab-header {
+  font-family: var(--ml-font);
+}
+
+// Primary color từ màu chủ đạo user chọn (--ml-primary)
+.mat-mdc-flat-button.mat-primary,
+.mat-mdc-raised-button.mat-primary {
+  background-color: var(--ml-primary);
+  --mdc-filled-button-container-color: var(--ml-primary);
+}
+.mat-mdc-flat-button.mat-primary:hover,
+.mat-mdc-raised-button.mat-primary:hover {
+  background-color: var(--ml-primary-dark);
+  --mdc-filled-button-container-color: var(--ml-primary-dark);
+}
+.mat-mdc-button.mat-primary {
+  color: var(--ml-primary) !important;
+  --mat-text-button-label-text-color: var(--ml-primary);
+}
+.mat-mdc-button.mat-primary:hover {
+  color: var(--ml-primary-dark) !important;
+  --mat-text-button-label-text-color: var(--ml-primary-dark);
+}
+.mat-mdc-slide-toggle.mat-primary {
+  --mdc-switch-selected-track-color: var(--ml-primary);
+  --mdc-switch-selected-hover-track-color: var(--ml-primary-dark);
+  --mdc-switch-selected-pressed-track-color: var(--ml-primary-dark);
+}
+.mat-mdc-progress-bar.mat-primary .mdc-linear-progress__bar-inner {
+  border-color: var(--ml-primary);
+}
+
+// Dialog xác nhận: bo góc đồng bộ với app, không quá tròn
+.mat-mdc-dialog-container .mdc-dialog__surface {
+  border-radius: var(--ml-radius-lg) !important;
+  max-width: min(400px, 92vw);
+}
+.mat-mdc-dialog-container .mat-mdc-dialog-content {
+  padding-top: 0.5rem;
+}
+.mat-mdc-dialog-container .mat-mdc-dialog-actions {
+  padding-bottom: 0;
+}

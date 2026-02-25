@@ -1,0 +1,8 @@
+@if (!auth.authReady() || !translationsReady()) {
+  <div class="app-loading">
+    <span class="app-loading-dot"></span>
+    <p>Đang tải...</p>
+  </div>
+} @else {
+  <router-outlet />
+}

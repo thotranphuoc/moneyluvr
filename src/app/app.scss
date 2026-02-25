@@ -1,0 +1,23 @@
+.app-loading {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  background: var(--ml-bg);
+  color: var(--ml-text-muted);
+  font-size: 0.9375rem;
+  font-family: var(--ml-font);
+}
+.app-loading-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--ml-primary);
+  animation: app-pulse 1.2s ease-in-out infinite;
+}
+@keyframes app-pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.5; transform: scale(1.2); }
+}
