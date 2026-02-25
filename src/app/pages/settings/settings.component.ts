@@ -188,12 +188,14 @@ const THEME_PRIMARY_OPTIONS: { name: string; hex: string }[] = [
           @for (w of data.wallets(); track w.id) {
             @if (editingWalletId() === w.id) {
               <li class="item-row edit-row" cdkDrag>
+                <mat-icon class="drag-handle" cdkDragHandle>drag_indicator</mat-icon>
                 <input class="edit-input" [(ngModel)]="walletName" (keydown.enter)="saveWallet()" (keydown.escape)="cancelEditWallet()" />
                 <button mat-icon-button (click)="saveWallet()" [attr.aria-label]="'common.save' | translate"><mat-icon>check</mat-icon></button>
                 <button mat-icon-button (click)="cancelEditWallet()" [attr.aria-label]="'common.cancel' | translate"><mat-icon>close</mat-icon></button>
               </li>
             } @else {
               <li class="item-row" cdkDrag>
+                <mat-icon class="drag-handle" cdkDragHandle>drag_indicator</mat-icon>
                 <span class="item-name">{{ w.name }}</span>
                 <button mat-icon-button (click)="startEditWallet(w)" [attr.aria-label]="'common.edit' | translate"><mat-icon>edit</mat-icon></button>
                 <button mat-icon-button color="warn" (click)="deleteWallet(w.id)" [attr.aria-label]="'common.delete' | translate"><mat-icon>delete</mat-icon></button>
@@ -229,6 +231,7 @@ const THEME_PRIMARY_OPTIONS: { name: string; hex: string }[] = [
           @for (c of incomeCategories(); track c.id) {
             @if (editingCategoryId() === c.id) {
               <li class="item-row edit-row" cdkDrag>
+                <mat-icon class="drag-handle" cdkDragHandle>drag_indicator</mat-icon>
                 <span class="color-dot" [style.background]="editCategoryColorValue"></span>
                 <input class="edit-input" [(ngModel)]="editCategoryName" (keydown.enter)="saveCategory()" (keydown.escape)="cancelEditCategory()" />
                 <select class="color-select-inline" [(ngModel)]="editCategoryColorValue">
@@ -241,6 +244,7 @@ const THEME_PRIMARY_OPTIONS: { name: string; hex: string }[] = [
               </li>
             } @else {
               <li class="item-row" cdkDrag>
+                <mat-icon class="drag-handle" cdkDragHandle>drag_indicator</mat-icon>
                 <span class="color-dot" [style.background]="c.color || '#0d9488'"></span>
                 <span class="item-name">{{ isUncategorizedCategory(c) ? ('categories.uncategorized' | translate) : c.name }}</span>
                 @if (!isUncategorizedCategory(c)) {
@@ -287,6 +291,7 @@ const THEME_PRIMARY_OPTIONS: { name: string; hex: string }[] = [
           @for (c of expenseCategories(); track c.id) {
             @if (editingCategoryId() === c.id) {
               <li class="item-row edit-row" cdkDrag>
+                <mat-icon class="drag-handle" cdkDragHandle>drag_indicator</mat-icon>
                 <span class="color-dot" [style.background]="editCategoryColorValue"></span>
                 <input class="edit-input" [(ngModel)]="editCategoryName" (keydown.enter)="saveCategory()" (keydown.escape)="cancelEditCategory()" />
                 <select class="color-select-inline" [(ngModel)]="editCategoryColorValue">
@@ -299,6 +304,7 @@ const THEME_PRIMARY_OPTIONS: { name: string; hex: string }[] = [
               </li>
             } @else {
               <li class="item-row" cdkDrag>
+                <mat-icon class="drag-handle" cdkDragHandle>drag_indicator</mat-icon>
                 <span class="color-dot" [style.background]="c.color || '#0d9488'"></span>
                 <span class="item-name">{{ isUncategorizedCategory(c) ? ('categories.uncategorized' | translate) : c.name }}</span>
                 @if (!isUncategorizedCategory(c)) {
