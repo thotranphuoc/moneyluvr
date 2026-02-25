@@ -38,6 +38,9 @@ testem.log
 /typings
 __screenshots__/
 
+# Generated at build from SUPABASE_URL / SUPABASE_ANON_KEY (do not commit)
+src/environments/environment.production.ts
+
 # System files
 .DS_Store
 Thumbs.db

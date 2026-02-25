@@ -4,11 +4,11 @@
 
 ## Cấu hình Supabase
 
-1. Tạo project tại [Supabase](https://supabase.com), lấy **Project URL** và **anon public** key.
-2. Tạo các bảng và bật RLS (xem `PRD-MoneyLuvr.md` mục 4.1). Cần bảng: `categories`, `wallets`, `transactions`, `budgets`, mỗi bảng có `user_id` và RLS `auth.uid() = user_id`.
-3. Sửa `src/environments/environment.development.ts` (và `src/environments/environment.ts` nếu build production):
-   - `supabase.url`: Project URL
-   - `supabase.anonKey`: anon key
+1. Tạo project tại [Supabase](https://supabase.com), lấy **Project URL** và **anon public** key (Dashboard → Project Settings → API).
+2. Tạo các bảng và bật RLS (xem `supabase-schema.sql` và `supabase/migrations/`). Cần bảng: `categories`, `wallets`, `transactions`, `budgets`, `user_preferences`, mỗi bảng có RLS theo `user_id`.
+3. **Biến môi trường (không lưu key trong repo):**
+   - **Production / Vercel:** Đặt `SUPABASE_URL` và `SUPABASE_ANON_KEY` trong Vercel → Project → Settings → Environment Variables. Lệnh `npm run build` sẽ tạo `environment.production.ts` từ hai biến này.
+   - **Local:** Chạy với env: `SUPABASE_URL=... SUPABASE_ANON_KEY=... ng serve` (file `environment.ts` trong repo dùng giá trị rỗng; muốn chạy local với key thì sửa tạm `src/environments/environment.ts` và không commit).
 
 Sau đó chạy `ng serve` và mở `http://localhost:4200/`. Chưa đăng nhập sẽ chuyển đến `/auth`.
 
@@ -42,13 +42,13 @@ ng generate --help
 
 ## Building
 
-To build the project run:
+To build the project for production, set `SUPABASE_URL` and `SUPABASE_ANON_KEY` then run:
 
 ```bash
-ng build
+npm run build
 ```
 
-This will compile your project and store the build artifacts in the `dist/` directory. By default, the production build optimizes your application for performance and speed.
+This generates `environment.production.ts` from env vars and runs `ng build`. Output is in `dist/moneyluvr-app/browser/`. Do not commit `environment.production.ts` (it is in `.gitignore`).
 
 ## Running unit tests
 
