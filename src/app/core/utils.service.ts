@@ -24,6 +24,15 @@ export class UtilsService {
     return isNaN(date.getTime()) ? null : date;
   }
 
+  /** Ngày ngắn không năm, ví dụ 27/02 */
+  formatShortDate(dateStr: string): string {
+    const d = this.parseLocalDate(dateStr);
+    if (!d) return dateStr;
+    const day = String(d.getDate()).padStart(2, '0');
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    return `${day}/${month}`;
+  }
+
   getMonthKey(date: Date): string {
     const y = date.getFullYear();
     const m = String(date.getMonth() + 1).padStart(2, '0');

@@ -97,11 +97,14 @@
   "income": {
     "addIncome": "Thêm thu nhập",
     "listTitle": "Danh sách thu nhập",
+    "doubleClickToEdit": "Double-click vào dòng để sửa.",
     "empty": "Chưa có giao dịch nào trong khoảng đã chọn."
   },
   "expense": {
     "addExpense": "Thêm chi tiêu",
     "listTitle": "Danh sách chi tiêu",
+    "doubleClickToEdit": "Double-click vào dòng để sửa.",
+    "loadMore": "Xem thêm",
     "empty": "Chưa có giao dịch nào trong khoảng đã chọn."
   },
   "messages": {

@@ -60,7 +60,8 @@ const MONTH_YEAR_DATE_FORMATS = {
       <h1 class="page-header">{{ 'pages.overview' | translate }}</h1>
       <mat-form-field appearance="outline" class="month-picker">
         <mat-label>{{ 'common.month' | translate }}</mat-label>
-        <input matInput [matDatepicker]="picker" [(ngModel)]="selectedMonth" (dateChange)="onMonthChange($event)" />
+        <input matInput [matDatepicker]="picker" [(ngModel)]="selectedMonth" (dateChange)="onMonthChange($event)" readonly />
+        <mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle>
         <mat-datepicker #picker startView="year"></mat-datepicker>
       </mat-form-field>
     </div>

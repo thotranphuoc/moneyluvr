@@ -11,9 +11,16 @@ export class AuthService {
   readonly authReady = this.authReadySig.asReadonly();
 
   constructor(private supabase: SupabaseService) {
+    // Chỉ đánh dấu authReady sau khi đã đọc session từ localStorage; tránh onAuthStateChange fire trước với null
+    this.supabase.supabase.auth.getSession().then(({ data: { session } }) => {
+      this.userSig.set(session?.user ?? null);
+      this.authReadySig.set(true);
+    }).catch(() => {
+      this.authReadySig.set(true);
+    });
+    // Cập nhật user khi đăng nhập/đăng xuất sau khi app đã load
     this.supabase.supabase.auth.onAuthStateChange((_event, session) => {
       this.userSig.set(session?.user ?? null);
-      if (!this.authReadySig()) this.authReadySig.set(true);
     });
   }
 

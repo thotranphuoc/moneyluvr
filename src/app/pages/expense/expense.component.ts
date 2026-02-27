@@ -78,7 +78,8 @@ import type { Currency } from '../../models';
             </mat-form-field>
             <mat-form-field appearance="outline" class="full-width">
               <mat-label>{{ 'common.date' | translate }}</mat-label>
-              <input matInput [matDatepicker]="datePicker" [(ngModel)]="form.date" name="date" required />
+              <input matInput [matDatepicker]="datePicker" [(ngModel)]="form.date" name="date" required readonly />
+              <mat-datepicker-toggle matSuffix [for]="datePicker"></mat-datepicker-toggle>
               <mat-datepicker #datePicker></mat-datepicker>
             </mat-form-field>
             <mat-form-field appearance="outline" class="full-width">
@@ -99,12 +100,14 @@ import type { Currency } from '../../models';
         <div class="filters">
           <mat-form-field appearance="outline" class="filter-field">
             <mat-label>{{ 'common.fromDate' | translate }}</mat-label>
-            <input matInput [matDatepicker]="fromPicker" [(ngModel)]="fromDate" (dateChange)="loadTransactions()" />
+            <input matInput [matDatepicker]="fromPicker" [(ngModel)]="fromDate" (dateChange)="loadTransactions()" readonly />
+            <mat-datepicker-toggle matSuffix [for]="fromPicker"></mat-datepicker-toggle>
             <mat-datepicker #fromPicker></mat-datepicker>
           </mat-form-field>
           <mat-form-field appearance="outline" class="filter-field">
             <mat-label>{{ 'common.toDate' | translate }}</mat-label>
-            <input matInput [matDatepicker]="toPicker" [(ngModel)]="toDate" (dateChange)="loadTransactions()" />
+            <input matInput [matDatepicker]="toPicker" [(ngModel)]="toDate" (dateChange)="loadTransactions()" readonly />
+            <mat-datepicker-toggle matSuffix [for]="toPicker"></mat-datepicker-toggle>
             <mat-datepicker #toPicker></mat-datepicker>
           </mat-form-field>
           <mat-form-field appearance="outline" class="filter-field">
@@ -123,25 +126,35 @@ import type { Currency } from '../../models';
     <mat-card class="ml-card list-card">
       <mat-card-header>
         <mat-card-title>{{ 'expense.listTitle' | translate }}</mat-card-title>
+        <mat-card-subtitle class="list-hint">{{ 'expense.doubleClickToEdit' | translate }}</mat-card-subtitle>
       </mat-card-header>
       <mat-card-content>
         @if (transactions().length === 0) {
           <p class="empty">{{ 'expense.empty' | translate }}</p>
         } @else {
           <ul class="tx-list">
-            @for (t of transactions(); track t.id) {
-              <li class="tx-row" (dblclick)="startEditTx(t)" (touchstart)="onRowTouchStart($event, t)" (touchend)="onRowTouchEnd($event, t)" (touchmove)="onRowTouchCancel()">
+            @for (t of displayedTransactions(); track t.id) {
+              <li class="tx-row" (click)="onRowClick($event, t)" (dblclick)="startEditTx(t); $event.preventDefault()">
                 <div class="tx-main">
-                  <span class="tx-category">{{ getCategoryName(t.category_id) }}</span>
-                  <span class="tx-meta">{{ t.date }} · {{ getWalletName(t.wallet_id) }}{{ t.note ? ' · ' + t.note : '' }}</span>
+                  <div class="tx-top">
+                    <span class="tx-category-label" [style.--category-bg]="getCategoryColor(t.category_id)" [style.--category-fg]="getCategoryColorFg(t.category_id)">{{ getCategoryName(t.category_id) }}</span>
+                    <span class="tx-date">{{ formatShortDate(t.date) }}</span>
+                  </div>
+                  <span class="tx-wallet-text">{{ getWalletName(t.wallet_id) }}</span>
+                  @if (t.note?.trim()) {
+                    <p class="tx-note">{{ t.note }}</p>
+                  }
                 </div>
                 <div class="tx-right">
                   <span class="tx-amount negative">− {{ t.amount | formatMoney:t.currency }}</span>
-                  <button mat-icon-button (click)="deleteTx(t.id)" (dblclick)="$event.stopPropagation()" [attr.aria-label]="'common.delete' | translate"><mat-icon>delete</mat-icon></button>
+                  <button mat-icon-button (click)="deleteTx(t.id); $event.stopPropagation()" (dblclick)="$event.stopPropagation()" [attr.aria-label]="'common.delete' | translate"><mat-icon>delete</mat-icon></button>
                 </div>
               </li>
             }
           </ul>
+          @if (transactions().length > displayLimit()) {
+            <button mat-button class="load-more" (click)="loadMore()">{{ 'expense.loadMore' | translate }} ({{ displayLimit() }}/{{ transactions().length }})</button>
+          }
         }
       </mat-card-content>
     </mat-card>
@@ -156,41 +169,75 @@ import type { Currency } from '../../models';
     .transaction-form { display: flex; flex-direction: column; gap: 0.5rem; }
     .form-actions { display: flex; gap: 0.5rem; margin-top: 0.5rem; }
     .list-card { margin-top: 1rem; }
-    .list-card .mat-mdc-card-title { font-size: 0.9375rem; font-weight: 600; color: var(--ml-text-muted); margin-bottom: 0.75rem; }
+    .list-card .mat-mdc-card-title { font-size: 0.9375rem; font-weight: 600; color: var(--ml-text-muted); margin-bottom: 0.25rem; }
+    .list-hint { margin: 0 0 0.5rem; font-size: 0.75rem; color: var(--ml-text-muted); }
     .empty { margin: 0; color: var(--ml-text-muted); font-size: 0.9375rem; }
     .tx-list { list-style: none; margin: 0; padding: 0; }
     .tx-row {
       display: flex;
-      align-items: center;
+      align-items: flex-start;
       justify-content: space-between;
-      padding: 0.75rem 0;
+      gap: 0.5rem;
+      padding: 0.5rem 0;
       border-bottom: 1px solid var(--ml-border);
       min-width: 0;
+      cursor: pointer;
+      user-select: none;
     }
     .tx-row:last-child { border-bottom: none; }
     .tx-main {
       display: flex;
       flex-direction: column;
-      gap: 0.15rem;
+      gap: 0.25rem;
       min-width: 0;
       flex: 1 1 auto;
     }
-    .tx-category {
-      font-weight: 500;
-      font-size: 0.9375rem;
+    .tx-top {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 0.35rem 0.5rem;
+    }
+    .tx-category-label {
+      display: inline-block;
+      font-size: 0.85rem;
+      font-weight: 600;
+      padding: 0.22rem 0.5rem;
+      border-radius: 999px;
+      background: var(--ml-bg-hover, rgba(0,0,0,.06));
+      background: color-mix(in srgb, var(--category-bg) 22%, transparent);
+      color: var(--category-fg);
+      width: fit-content;
+      max-width: 100%;
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
     }
-    .tx-meta {
-      font-size: 0.8125rem;
+    .tx-date {
+      font-size: 0.8rem;
+      color: var(--ml-text-muted);
+      flex-shrink: 0;
+    }
+    .tx-wallet-text {
+      font-size: 0.8rem;
       color: var(--ml-text-muted);
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
     }
-    .tx-right { display: flex; align-items: center; gap: 0.25rem; flex-shrink: 0; }
-    .tx-amount.negative { color: var(--ml-error); font-weight: 600; white-space: nowrap; }
+    .tx-note {
+      margin: 0;
+      font-size: 0.8rem;
+      color: var(--ml-text-muted);
+      line-height: 1.3;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      padding-left: 0;
+    }
+    .tx-right { display: flex; align-items: center; gap: 0.15rem; flex-shrink: 0; }
+    .tx-amount.negative { color: var(--ml-error); font-weight: 600; font-size: 0.95rem; white-space: nowrap; }
+    .load-more { margin-top: 0.5rem; width: 100%; text-transform: none; }
   `]
 })
 export class ExpenseComponent {
@@ -205,9 +252,13 @@ export class ExpenseComponent {
   editingTxId = signal<string | null>(null);
   saving = signal(false);
   transactions = signal<Transaction[]>([]);
+  /** Số dòng hiển thị; reset khi đổi filter, tăng khi bấm "Xem thêm". */
+  displayLimit = signal(10);
+  displayedTransactions = computed(() => this.transactions().slice(0, this.displayLimit()));
   fromDate: Date;
   toDate: Date;
   filterWalletId: string | null = null;
+  private readonly PAGE_SIZE = 10;
 
   form = {
     amount: 0,
@@ -219,9 +270,6 @@ export class ExpenseComponent {
   };
 
   expenseCategories = computed(() => this.data.categories().filter(c => c.type === 'expense'));
-
-  private _touchStartTime = 0;
-  private _touchStartTx: Transaction | null = null;
 
   constructor() {
     const { from, to } = this.utils.getCurrentMonthRange();
@@ -252,6 +300,11 @@ export class ExpenseComponent {
       walletId: this.filterWalletId ?? undefined
     });
     this.transactions.set(list);
+    this.displayLimit.set(this.PAGE_SIZE);
+  }
+
+  loadMore(): void {
+    this.displayLimit.update(n => n + this.PAGE_SIZE);
   }
 
   openForm(): void {
@@ -281,23 +334,29 @@ export class ExpenseComponent {
       note: t.note ?? ''
     };
     this.showForm.set(true);
+    this.scrollFormIntoView();
   }
 
-  onRowTouchStart(_e: TouchEvent, t: Transaction): void {
-    this._touchStartTime = Date.now();
-    this._touchStartTx = t;
+  private scrollFormIntoView(): void {
+    queueMicrotask(() => {
+      const el = document.querySelector('.transaction-form');
+      if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
   }
 
-  onRowTouchEnd(e: TouchEvent, t: Transaction): void {
-    if (this._touchStartTx === t && Date.now() - this._touchStartTime >= 500) {
+  /** Hai lần click nhanh trên cùng dòng = mở sửa (đáng tin cậy hơn sự kiện dblclick trên một số trình duyệt). */
+  private _lastClick: { id: string; time: number } | null = null;
+  private readonly _doubleClickDelayMs = 400;
+
+  onRowClick(e: Event, t: Transaction): void {
+    if ((e.target as HTMLElement).closest('button')) return;
+    const now = Date.now();
+    if (this._lastClick?.id === t.id && now - this._lastClick.time < this._doubleClickDelayMs) {
+      this._lastClick = null;
       this.startEditTx(t);
-      e.preventDefault();
+      return;
     }
-    this._touchStartTx = null;
-  }
-
-  onRowTouchCancel(): void {
-    this._touchStartTx = null;
+    this._lastClick = { id: t.id, time: now };
   }
 
   cancelForm(): void {
@@ -387,5 +446,26 @@ export class ExpenseComponent {
 
   getWalletName(id: string): string {
     return this.data.wallets().find(w => w.id === id)?.name ?? id;
+  }
+
+  formatShortDate(dateStr: string): string {
+    return this.utils.formatShortDate(dateStr);
+  }
+
+  /** Màu cho category (từ category.color hoặc palette theo thứ tự). */
+  private readonly CATEGORY_PALETTE = [
+    '#b91c1c', '#b45309', '#047857', '#0d9488', '#2563eb', '#7c3aed', '#c026d3', '#0e7490'
+  ];
+
+  getCategoryColor(categoryId: string): string {
+    const cats = this.expenseCategories();
+    const cat = cats.find(c => c.id === categoryId);
+    if (cat?.color) return cat.color;
+    const i = cats.findIndex(c => c.id === categoryId);
+    return this.CATEGORY_PALETTE[i >= 0 ? i % this.CATEGORY_PALETTE.length : 0];
+  }
+
+  getCategoryColorFg(categoryId: string): string {
+    return this.getCategoryColor(categoryId);
   }
 }

@@ -53,7 +53,8 @@ const MONTH_YEAR_DATE_FORMATS = {
     <div class="controls">
       <mat-form-field appearance="outline" class="month-picker">
         <mat-label>{{ 'common.month' | translate }}</mat-label>
-        <input matInput [matDatepicker]="picker" [(ngModel)]="selectedMonth" (dateChange)="onMonthChange($event)" />
+        <input matInput [matDatepicker]="picker" [(ngModel)]="selectedMonth" (dateChange)="onMonthChange($event)" readonly />
+        <mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle>
         <mat-datepicker #picker startView="year"></mat-datepicker>
       </mat-form-field>
     </div>
@@ -93,14 +94,14 @@ const MONTH_YEAR_DATE_FORMATS = {
                 <span class="cat-dot" [style.background-color]="cat.color || '#64748b'"></span>
                 <span class="cat-name">{{ getCategoryDisplayName(cat) }}</span>
                 <span class="card-header-spacer"></span>
-                <button mat-icon-button (click)="startEdit(cat, budgetByCategory()[cat.id] ?? null)" [attr.aria-label]="'budget.setOrEditLimit' | translate">
+                <button mat-icon-button (click)="startEdit(cat, budgetByCategory()[cat.id])" [attr.aria-label]="'budget.setOrEditLimit' | translate">
                   <mat-icon>edit</mat-icon>
                 </button>
               }
             </div>
             <p class="card-limit">
               @if (budgetByCategory()[cat.id]; as b) {
-                {{ 'budget.spent' | translate }} {{ (spentByCategory()[cat.id] ?? 0) | formatMoney:currency() }} / {{ b.amount | formatMoney:currency() }}
+                {{ 'budget.spent' | translate }} {{ spentByCategory()[cat.id] | formatMoney:currency() }} / {{ b.amount | formatMoney:currency() }}
               } @else {
                 {{ 'budget.notSet' | translate }}
               }
@@ -306,7 +307,7 @@ export class BudgetComponent {
     return cat.name;
   }
 
-  startEdit(cat: Category, existing: Budget | null): void {
+  startEdit(cat: Category, existing: Budget | null | undefined): void {
     this.editingCategoryId.set(cat.id);
     this.editingAmount = existing?.amount ?? 0;
   }

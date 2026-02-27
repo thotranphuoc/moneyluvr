@@ -84,12 +84,14 @@ const THEME_PRIMARY_OPTIONS: { name: string; hex: string }[] = [
         <div class="export-date-row">
           <mat-form-field appearance="outline" class="export-field">
             <mat-label>{{ 'common.fromDate' | translate }}</mat-label>
-            <input matInput [matDatepicker]="exportFromPicker" [(ngModel)]="exportFromDate" />
+            <input matInput [matDatepicker]="exportFromPicker" [(ngModel)]="exportFromDate" readonly />
+            <mat-datepicker-toggle matSuffix [for]="exportFromPicker"></mat-datepicker-toggle>
             <mat-datepicker #exportFromPicker></mat-datepicker>
           </mat-form-field>
           <mat-form-field appearance="outline" class="export-field">
             <mat-label>{{ 'common.toDate' | translate }}</mat-label>
-            <input matInput [matDatepicker]="exportToPicker" [(ngModel)]="exportToDate" />
+            <input matInput [matDatepicker]="exportToPicker" [(ngModel)]="exportToDate" readonly />
+            <mat-datepicker-toggle matSuffix [for]="exportToPicker"></mat-datepicker-toggle>
             <mat-datepicker #exportToPicker></mat-datepicker>
           </mat-form-field>
           <button mat-flat-button color="primary" (click)="downloadTransactions()" [disabled]="exporting()">

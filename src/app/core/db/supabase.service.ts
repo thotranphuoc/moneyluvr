@@ -15,7 +15,14 @@ export class SupabaseService {
       if (!url || !anonKey) {
         throw new Error('Supabase URL và anon key chưa được cấu hình. Kiểm tra environment.');
       }
-      this.client = createClient(url, anonKey);
+      this.client = createClient(url, anonKey, {
+        auth: {
+          persistSession: true,
+          storage: typeof window !== 'undefined' ? window.localStorage : undefined,
+          autoRefreshToken: true,
+          detectSessionInUrl: true
+        }
+      });
     }
     return this.client;
   }

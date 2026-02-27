@@ -97,11 +97,14 @@
   "income": {
     "addIncome": "Add income",
     "listTitle": "Income list",
+    "doubleClickToEdit": "Double-click a row to edit.",
     "empty": "No transactions in the selected range."
   },
   "expense": {
     "addExpense": "Add expense",
     "listTitle": "Expense list",
+    "doubleClickToEdit": "Double-click a row to edit.",
+    "loadMore": "Load more",
     "empty": "No transactions in the selected range."
   },
   "messages": {
