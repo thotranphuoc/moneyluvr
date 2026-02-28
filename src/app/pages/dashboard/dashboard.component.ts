@@ -31,6 +31,13 @@ interface CategorySum {
   total: number;
 }
 
+/** Cùng cấu trúc cho tổng theo nguồn (wallet). */
+interface WalletSum {
+  name: string;
+  color: string;
+  total: number;
+}
+
 const MONTH_YEAR_DATE_FORMATS = {
   ...MAT_NATIVE_DATE_FORMATS,
   display: {
@@ -296,21 +303,25 @@ export class DashboardComponent implements AfterViewInit, OnDestroy {
       .sort((a, b) => b.total - a.total);
   });
 
-  incomeByCategory = computed((): CategorySum[] => {
+  /** Thu nhập theo ví (income by source = by wallet). */
+  private readonly WALLET_PALETTE = [
+    '#0d9488', '#2563eb', '#b91c1c', '#b45309', '#7c3aed', '#047857', '#c026d3', '#0e7490'
+  ];
+
+  incomeByWallet = computed((): WalletSum[] => {
     const tx = this.filteredTx().filter(t => t.type === 'income');
-    const categories = this.data.categories();
-    const userId = this.auth.user()?.id ?? '';
+    const wallets = this.data.wallets();
     const map = new Map<string, number>();
     for (const t of tx) {
-      map.set(t.category_id, (map.get(t.category_id) ?? 0) + t.amount);
+      map.set(t.wallet_id, (map.get(t.wallet_id) ?? 0) + t.amount);
     }
     return Array.from(map.entries())
-      .map(([catId, total]) => {
-        const cat = categories.find(c => c.id === catId);
-        const name = cat && userId && this.data.isUncategorizedCategoryId(cat.id, userId)
-          ? this.translate.instant('categories.uncategorized')
-          : (cat?.name ?? catId);
-        return { name, color: cat?.color ?? '#64748b', total };
+      .map(([walletId, total]) => {
+        const wallet = wallets.find(w => w.id === walletId);
+        const name = wallet?.name ?? walletId;
+        const i = wallets.findIndex(w => w.id === walletId);
+        const color = this.WALLET_PALETTE[i >= 0 ? i % this.WALLET_PALETTE.length : 0];
+        return { name, color, total };
       })
       .filter(x => x.total > 0)
       .sort((a, b) => b.total - a.total);
@@ -336,7 +347,7 @@ export class DashboardComponent implements AfterViewInit, OnDestroy {
     });
     effect(() => {
       this.expenseByCategory();
-      this.incomeByCategory();
+      this.incomeByWallet();
       this.updateCharts();
     });
   }
@@ -412,7 +423,7 @@ export class DashboardComponent implements AfterViewInit, OnDestroy {
 
   private updateCharts(): void {
     const expense = this.expenseByCategory();
-    const income = this.incomeByCategory();
+    const income = this.incomeByWallet();
 
     if (this.chartExpense) {
       this.chartExpense.data.labels = expense.map(x => x.name);
