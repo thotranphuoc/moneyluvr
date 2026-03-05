@@ -69,7 +69,7 @@ const MONTH_YEAR_DATE_FORMATS = {
         <mat-label>{{ 'common.month' | translate }}</mat-label>
         <input matInput [matDatepicker]="picker" [(ngModel)]="selectedMonth" (dateChange)="onMonthChange($event)" readonly />
         <mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle>
-        <mat-datepicker #picker startView="year"></mat-datepicker>
+        <mat-datepicker #picker startView="year" (monthSelected)="onMonthSelected($event, picker)"></mat-datepicker>
       </mat-form-field>
     </div>
     <div class="currency-row">
@@ -98,12 +98,14 @@ const MONTH_YEAR_DATE_FORMATS = {
           </div>
         </mat-card-content>
       </mat-card>
-      <mat-card class="ml-card stat-card stat-balance" [class.stat-negative]="balance() < 0">
+      <mat-card class="ml-card stat-card stat-balance" [class.stat-negative]="closingBalance() < 0">
         <mat-card-content class="stat-card-inner">
           <mat-icon class="stat-icon stat-icon-balance">account_balance</mat-icon>
-          <div class="stat-text">
-            <span class="stat-title">{{ 'dashboard.balance' | translate }}</span>
-            <span class="stat-value">{{ balance() | formatMoney:currencyTab() }}</span>
+          <div class="stat-text stat-text-balance">
+            <span class="stat-title">{{ 'dashboard.openingBalance' | translate }}</span>
+            <span class="stat-value stat-value-secondary">{{ openingBalance() | formatMoney:currencyTab() }}</span>
+            <span class="stat-title">{{ 'dashboard.closingBalance' | translate }}</span>
+            <span class="stat-value">{{ closingBalance() | formatMoney:currencyTab() }}</span>
           </div>
         </mat-card-content>
       </mat-card>
@@ -126,6 +128,16 @@ const MONTH_YEAR_DATE_FORMATS = {
         <mat-card-content>
           <div class="chart-wrap">
             <canvas #chartIncome></canvas>
+          </div>
+        </mat-card-content>
+      </mat-card>
+      <mat-card class="ml-card chart-card">
+        <mat-card-header>
+          <mat-card-title>{{ 'dashboard.balanceByWallet' | translate }}</mat-card-title>
+        </mat-card-header>
+        <mat-card-content>
+          <div class="chart-wrap">
+            <canvas #chartBalanceByWallet></canvas>
           </div>
         </mat-card-content>
       </mat-card>
@@ -222,8 +234,10 @@ const MONTH_YEAR_DATE_FORMATS = {
     }
     .stat-income .stat-value { color: var(--ml-success); }
     .stat-expense .stat-value { color: var(--ml-error); }
-    .stat-balance .stat-value { color: var(--ml-primary); }
-    .stat-balance.stat-negative .stat-value { color: var(--ml-error); }
+    .stat-text-balance { gap: 0.35rem; }
+    .stat-value-secondary { font-size: 1rem; font-weight: 600; color: var(--ml-text-muted); }
+    .stat-balance .stat-text-balance .stat-value:not(.stat-value-secondary) { color: var(--ml-primary); }
+    .stat-balance.stat-negative .stat-text-balance .stat-value:not(.stat-value-secondary) { color: var(--ml-error); }
     .charts {
       display: grid;
       grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
@@ -258,19 +272,29 @@ export class DashboardComponent implements AfterViewInit, OnDestroy {
 
   @ViewChild('chartExpense') chartExpenseRef!: ElementRef<HTMLCanvasElement>;
   @ViewChild('chartIncome') chartIncomeRef!: ElementRef<HTMLCanvasElement>;
+  @ViewChild('chartBalanceByWallet') chartBalanceByWalletRef!: ElementRef<HTMLCanvasElement>;
 
   private chartExpense: Chart<'doughnut'> | null = null;
   private chartIncome: Chart<'doughnut'> | null = null;
+  private chartBalanceByWallet: Chart<'doughnut'> | null = null;
 
   monthDate = signal(new Date());
   selectedMonth: Date = new Date();
   currencyTab = signal<Currency>(this.data.currency() ?? 'VND');
   monthTransactions = signal<Transaction[]>([]);
+  /** Giao dịch từ đầu đến hết tháng trước (để tính số dư đầu tháng). */
+  transactionsBeforeMonth = signal<Transaction[]>([]);
 
   monthKey = computed(() => this.utils.getMonthKey(this.monthDate()));
 
   private filteredTx = computed(() => {
     const tx = this.monthTransactions();
+    const cur = this.currencyTab();
+    return tx.filter(t => t.currency === cur);
+  });
+
+  private filteredBeforeTx = computed(() => {
+    const tx = this.transactionsBeforeMonth();
     const cur = this.currencyTab();
     return tx.filter(t => t.currency === cur);
   });
@@ -281,7 +305,22 @@ export class DashboardComponent implements AfterViewInit, OnDestroy {
   totalExpense = computed(() =>
     this.filteredTx().filter(t => t.type === 'expense').reduce((s, t) => s + t.amount, 0)
   );
-  balance = computed(() => this.totalIncome() - this.totalExpense());
+
+  /** Số dư đầu tháng = tổng (thu − chi) trước tháng đang xem, theo currency. */
+  openingBalance = computed(() => {
+    const tx = this.filteredBeforeTx();
+    const income = tx.filter(t => t.type === 'income').reduce((s, t) => s + t.amount, 0);
+    const expense = tx.filter(t => t.type === 'expense').reduce((s, t) => s + t.amount, 0);
+    return income - expense;
+  });
+
+  /** Số dư cuối tháng = số dư đầu tháng + thu trong tháng − chi trong tháng. */
+  closingBalance = computed(() =>
+    this.openingBalance() + this.totalIncome() - this.totalExpense()
+  );
+
+  /** Giữ tên balance cho tương thích; trả về số dư cuối tháng. */
+  balance = computed(() => this.closingBalance());
 
   expenseByCategory = computed((): CategorySum[] => {
     const tx = this.filteredTx().filter(t => t.type === 'expense');
@@ -327,6 +366,29 @@ export class DashboardComponent implements AfterViewInit, OnDestroy {
       .sort((a, b) => b.total - a.total);
   });
 
+  /** Số dư cuối tháng theo từng ví (currency đang chọn). */
+  balanceByWallet = computed((): WalletSum[] => {
+    const before = this.filteredBeforeTx();
+    const month = this.filteredTx();
+    const allInCurrency = [...before, ...month];
+    const wallets = this.data.wallets();
+    const map = new Map<string, number>();
+    for (const t of allInCurrency) {
+      const delta = t.type === 'income' ? t.amount : -t.amount;
+      map.set(t.wallet_id, (map.get(t.wallet_id) ?? 0) + delta);
+    }
+    return Array.from(map.entries())
+      .map(([walletId, total]) => {
+        const wallet = wallets.find(w => w.id === walletId);
+        const name = wallet?.name ?? walletId;
+        const i = wallets.findIndex(w => w.id === walletId);
+        const color = this.WALLET_PALETTE[i >= 0 ? i % this.WALLET_PALETTE.length : 0];
+        return { name, color, total };
+      })
+      .filter(x => x.total !== 0)
+      .sort((a, b) => b.total - a.total);
+  });
+
   onMonthChange(event: { value: Date | null }): void {
     if (event.value) {
       this.monthDate.set(event.value);
@@ -334,7 +396,14 @@ export class DashboardComponent implements AfterViewInit, OnDestroy {
     }
   }
 
-  constructor() {
+  /** Chọn tháng xong đóng picker, không chuyển sang view ngày. */
+  onMonthSelected(month: Date, picker: MatDatepicker<Date>): void {
+    this.selectedMonth = month;
+    this.monthDate.set(month);
+    picker.close();
+  }
+
+    constructor() {
     effect(() => {
       if (!this.data.initialized()) return;
       const user = this.auth.user();
@@ -344,10 +413,16 @@ export class DashboardComponent implements AfterViewInit, OnDestroy {
       this.data.getTransactions({ userId: user.id, from, to }).then(list => {
         this.monthTransactions.set(list);
       });
+      const prevKey = this.utils.getPrevMonth(key);
+      const { to: prevTo } = this.utils.getMonthRange(prevKey);
+      this.data.getTransactions({ userId: user.id, from: '2000-01-01', to: prevTo }).then(list => {
+        this.transactionsBeforeMonth.set(list);
+      });
     });
     effect(() => {
       this.expenseByCategory();
       this.incomeByWallet();
+      this.balanceByWallet();
       this.updateCharts();
     });
   }
@@ -359,6 +434,7 @@ export class DashboardComponent implements AfterViewInit, OnDestroy {
   ngOnDestroy(): void {
     this.chartExpense?.destroy();
     this.chartIncome?.destroy();
+    this.chartBalanceByWallet?.destroy();
   }
 
   private initCharts(): void {
@@ -418,12 +494,41 @@ export class DashboardComponent implements AfterViewInit, OnDestroy {
       }
     });
 
+    const balanceCanvas = this.chartBalanceByWalletRef?.nativeElement;
+    if (balanceCanvas) {
+      this.chartBalanceByWallet = new Chart(balanceCanvas, {
+        type: 'doughnut',
+        data: {
+          labels: [],
+          datasets: [{ data: [], backgroundColor: [] }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: true,
+          animation: { duration: 800 },
+          plugins: {
+            tooltip: {
+              callbacks: {
+                label: (ctx) => {
+                  const data = ctx.dataset.data as number[];
+                  const total = data.reduce((a, b) => a + b, 0);
+                  const pct = total ? ((ctx.raw as number) / total * 100).toFixed(1) : '0';
+                  return `${ctx.label}: ${formatTooltip(ctx.raw as number)} (${pct}%)`;
+                }
+              }
+            }
+          }
+        }
+      });
+    }
+
     this.updateCharts();
   }
 
   private updateCharts(): void {
     const expense = this.expenseByCategory();
     const income = this.incomeByWallet();
+    const balance = this.balanceByWallet();
 
     if (this.chartExpense) {
       this.chartExpense.data.labels = expense.map(x => x.name);
@@ -436,6 +541,12 @@ export class DashboardComponent implements AfterViewInit, OnDestroy {
       this.chartIncome.data.datasets[0].data = income.map(x => x.total);
       this.chartIncome.data.datasets[0].backgroundColor = income.map(x => x.color);
       this.chartIncome.update();
+    }
+    if (this.chartBalanceByWallet) {
+      this.chartBalanceByWallet.data.labels = balance.map(x => x.name);
+      this.chartBalanceByWallet.data.datasets[0].data = balance.map(x => x.total);
+      this.chartBalanceByWallet.data.datasets[0].backgroundColor = balance.map(x => x.color);
+      this.chartBalanceByWallet.update();
     }
   }
 }

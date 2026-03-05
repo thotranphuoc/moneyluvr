@@ -13,6 +13,7 @@ export const routes: Routes = [
       { path: 'income', loadComponent: () => import('./pages/income/income.component').then(m => m.IncomeComponent) },
       { path: 'expense', loadComponent: () => import('./pages/expense/expense.component').then(m => m.ExpenseComponent) },
       { path: 'budget', loadComponent: () => import('./pages/budget/budget.component').then(m => m.BudgetComponent) },
+      { path: 'transfer', loadComponent: () => import('./pages/transfer/transfer.component').then(m => m.TransferComponent) },
       { path: 'settings', loadComponent: () => import('./pages/settings/settings.component').then(m => m.SettingsComponent) }
     ]
   },

@@ -29,6 +29,7 @@
     "income": "Income",
     "expense": "Expense",
     "budget": "Budget",
+    "transfer": "Transfer",
     "settings": "Settings"
   },
   "pages": {
@@ -36,14 +37,40 @@
     "income": "Income",
     "expense": "Expense",
     "budget": "Budget",
+    "transfer": "Transfer",
     "settings": "Settings"
+  },
+  "transfer": {
+    "fromWallet": "From wallet",
+    "toWallet": "To wallet",
+    "amount": "Amount",
+    "submit": "Transfer",
+    "success": "Transfer completed.",
+    "sameWalletError": "From and to wallet must be different.",
+    "noteTo": "Transfer to {{wallet}}",
+    "noteFrom": "Transfer from {{wallet}}",
+    "needTwoWallets": "Add at least two wallets in Settings to transfer."
+  },
+  "harvest": {
+    "title": "Month-end Harvest",
+    "congrats": "Congratulations! Last month you kept",
+    "congratsSuffix": "You did great!",
+    "question": "What do you want to do with this surplus?",
+    "btnSavings": "Put into Savings / Investment fund",
+    "btnGuilty": "Treat yourself",
+    "btnLeave": "Leave it as working capital",
+    "success": "Transferred to fund.",
+    "error": "Something went wrong. Please try again."
   },
   "dashboard": {
     "totalIncome": "Total income",
     "totalExpense": "Total expense",
     "balance": "Balance",
+    "openingBalance": "Opening balance",
+    "closingBalance": "Closing balance",
     "spendingByCategory": "Spending by category",
-    "incomeBySource": "Income by source"
+    "incomeBySource": "Income by source",
+    "balanceByWallet": "Current balance by wallet"
   },
   "budget": {
     "summary": "Total",

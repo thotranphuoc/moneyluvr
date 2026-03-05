@@ -1,11 +1,14 @@
-import { Component, inject, OnInit } from '@angular/core';
+import { Component, inject, OnInit, effect, signal } from '@angular/core';
 import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
-import { TranslateModule } from '@ngx-translate/core';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { AuthService } from '../core/auth.service';
 import { DataService } from '../core/data.service';
+import { HarvestService } from '../core/harvest.service';
 import { MatToolbarModule } from '@angular/material/toolbar';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
+import { MatSnackBar } from '@angular/material/snack-bar';
+import { HarvestDialogComponent } from '../shared/harvest-dialog/harvest-dialog.component';
 
 @Component({
   selector: 'app-layout',
@@ -17,7 +20,8 @@ import { MatIconModule } from '@angular/material/icon';
     MatToolbarModule,
     MatButtonModule,
     MatIconModule,
-    TranslateModule
+    TranslateModule,
+    HarvestDialogComponent
   ],
   template: `
     @if (!data.initialized()) {
@@ -34,6 +38,7 @@ import { MatIconModule } from '@angular/material/icon';
         <a routerLink="/income" routerLinkActive="active">{{ 'nav.income' | translate }}</a>
         <a routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">{{ 'nav.expense' | translate }}</a>
         <a routerLink="/budget" routerLinkActive="active">{{ 'nav.budget' | translate }}</a>
+        <a routerLink="/transfer" routerLinkActive="active">{{ 'nav.transfer' | translate }}</a>
         <a routerLink="/settings" routerLinkActive="active">{{ 'nav.settings' | translate }}</a>
       </div>
     </mat-toolbar>
@@ -59,11 +64,18 @@ import { MatIconModule } from '@angular/material/icon';
         <mat-icon>account_balance_wallet</mat-icon>
         <span>{{ 'nav.budget' | translate }}</span>
       </a>
+      <a routerLink="/transfer" routerLinkActive="active" class="nav-item">
+        <mat-icon>swap_horiz</mat-icon>
+        <span>{{ 'nav.transfer' | translate }}</span>
+      </a>
       <a routerLink="/settings" routerLinkActive="active" class="nav-item">
         <mat-icon>settings</mat-icon>
         <span>{{ 'nav.settings' | translate }}</span>
       </a>
     </nav>
+    }
+    @if (harvestAmounts()) {
+      <app-harvest-dialog [amounts]="harvestAmounts()!" (closed)="onHarvestClosed($event)" />
     }
   `,
   styles: [`
@@ -213,11 +225,45 @@ export class LayoutComponent implements OnInit {
   title = 'MoneyLuvr';
   data = inject(DataService);
   private auth = inject(AuthService);
+  private harvestService = inject(HarvestService);
+  private snackBar = inject(MatSnackBar);
+  private translate = inject(TranslateService);
+
+  /** Nghi lễ Thu hoạch: số dư theo currency nếu cần show popup. */
+  harvestAmounts = signal<Record<string, number> | null>(null);
+
+  constructor() {
+    effect(() => {
+      if (!this.data.initialized()) return;
+      const user = this.auth.user();
+      if (!user) return;
+      this.harvestService.checkShouldShow(user.id).then(amounts => {
+        if (amounts) this.harvestAmounts.set(amounts);
+      });
+    });
+  }
 
   ngOnInit(): void {
     const user = this.auth.user();
     if (user && !this.data.initialized()) {
       this.data.init(user.id);
+    }
+  }
+
+  async onHarvestClosed(choice: 'savings' | 'guilty' | 'leave'): Promise<void> {
+    const user = this.auth.user();
+    const amounts = this.harvestAmounts();
+    this.harvestAmounts.set(null);
+    if (!user || !amounts) return;
+    const prevKey = this.harvestService.getPrevMonthKey();
+    try {
+      if (choice === 'savings' || choice === 'guilty') {
+        await this.harvestService.transferHarvestToWallet(user.id, choice, amounts);
+        this.snackBar.open(this.translate.instant('harvest.success'), '', { duration: 2500 });
+      }
+      await this.harvestService.markShown(user.id, prevKey);
+    } catch (e) {
+      this.snackBar.open(this.translate.instant('harvest.error'), '', { duration: 4000 });
     }
   }
 }

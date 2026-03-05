@@ -132,6 +132,7 @@ export class SupabaseService {
       .from('transactions')
       .select('*')
       .eq('user_id', params.userId)
+      .order('created_at', { ascending: false })
       .order('date', { ascending: false });
     if (params.type) q = q.eq('type', params.type);
     if (params.from) q = q.gte('date', params.from);
@@ -196,6 +197,7 @@ export class SupabaseService {
       .from('transactions')
       .select('*')
       .eq('user_id', userId)
+      .order('created_at', { ascending: false })
       .order('date', { ascending: false });
     if (error) throw error;
     return (data ?? []) as Transaction[];
@@ -224,6 +226,25 @@ export class SupabaseService {
     const { error } = await this.supabase
       .from('user_preferences')
       .upsert(row, { onConflict: 'user_id' });
+    if (error) throw error;
+  }
+
+  /** Nghi lễ Thu hoạch (3C): danh sách tháng đã show popup. */
+  async getHarvestShownMonthKeys(userId: string): Promise<string[]> {
+    const { data, error } = await this.supabase
+      .from('user_harvest_shown')
+      .select('month_key')
+      .eq('user_id', userId);
+    if (error) throw error;
+    const rows = (data ?? []) as { month_key: string }[];
+    return rows.map(r => r.month_key);
+  }
+
+  /** Đánh dấu đã show harvest popup cho tháng. */
+  async markHarvestShown(userId: string, monthKey: string): Promise<void> {
+    const { error } = await this.supabase
+      .from('user_harvest_shown')
+      .upsert({ user_id: userId, month_key: monthKey }, { onConflict: 'user_id,month_key' });
     if (error) throw error;
   }
 }

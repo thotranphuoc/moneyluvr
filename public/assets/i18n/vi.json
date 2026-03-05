@@ -29,6 +29,7 @@
     "income": "Thu nhập",
     "expense": "Chi tiêu",
     "budget": "Ngân sách",
+    "transfer": "Chuyển tiền",
     "settings": "Cài đặt"
   },
   "pages": {
@@ -36,14 +37,40 @@
     "income": "Thu nhập",
     "expense": "Chi tiêu",
     "budget": "Ngân sách",
+    "transfer": "Chuyển tiền",
     "settings": "Cài đặt"
+  },
+  "transfer": {
+    "fromWallet": "Từ ví",
+    "toWallet": "Sang ví",
+    "amount": "Số tiền",
+    "submit": "Chuyển",
+    "success": "Đã chuyển tiền.",
+    "sameWalletError": "Ví nguồn và ví đích phải khác nhau.",
+    "noteTo": "Chuyển sang {{wallet}}",
+    "noteFrom": "Chuyển từ {{wallet}}",
+    "needTwoWallets": "Thêm ít nhất 2 ví trong Cài đặt để chuyển tiền."
+  },
+  "harvest": {
+    "title": "Nghi lễ Thu hoạch",
+    "congrats": "Chúc mừng! Tháng trước bạn đã xuất sắc giữ lại được",
+    "congratsSuffix": "Bạn giỏi lắm!",
+    "question": "Bạn muốn làm gì với số tiền dư này?",
+    "btnSavings": "Bỏ vào Quỹ Tiết Kiệm / Đầu tư",
+    "btnGuilty": "Tự thưởng bản thân",
+    "btnLeave": "Cứ để đó làm vốn lưu động",
+    "success": "Đã chuyển vào quỹ.",
+    "error": "Không thể thực hiện. Thử lại sau."
   },
   "dashboard": {
     "totalIncome": "Tổng thu",
     "totalExpense": "Tổng chi",
     "balance": "Cân đối",
+    "openingBalance": "Số dư đầu tháng",
+    "closingBalance": "Số dư cuối tháng",
     "spendingByCategory": "Chi tiêu theo danh mục",
-    "incomeBySource": "Thu nhập theo nguồn"
+    "incomeBySource": "Thu nhập theo nguồn",
+    "balanceByWallet": "Số dư theo ví"
   },
   "budget": {
     "summary": "Tổng",
